@@ -1,0 +1,63 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+  UsePipes,
+  ValidationPipe
+} from "@nestjs/common";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { IdValidationPipe } from "../pipes/id.validation.pipe";
+import { ActorDto } from "./actor.dto";
+import { ActorService } from "./actor.service";
+
+@Controller('actors')
+export class ActorController {
+  constructor(private readonly actorService: ActorService) {}
+
+  @Get()
+  async getAll(@Query('searchTerm') searchTerm?: string) {
+    return this.actorService.getAll(searchTerm)
+  }
+
+  @Get('by-slug/:slug')
+  async bySlug(@Param('slug') slug: string) {
+    return this.actorService.bySlug(slug)
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Post()
+  @HttpCode(200)
+  @Auth('admin')
+  async create() {
+    return this.actorService.create()
+  }
+
+  @Get(':id')
+  @Auth('admin')
+  async get(@Param('id', IdValidationPipe) id: string) {
+    return this.actorService.byId(id)
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Put(':id')
+  @HttpCode(200)
+  @Auth('admin')
+  async update(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: ActorDto
+  ) {
+    return await this.actorService.update(id, dto)
+  }
+
+  @Delete(':id')
+  @Auth('admin')
+  async delete(@Param('id', IdValidationPipe) id: string) {
+    return await this.actorService.delete(id)
+  }
+}
